@@ -2,42 +2,53 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="加减法 - 幼儿园阶段小朋友低位加减法练习" />
-    <!--
-      将WebApp添加到主屏幕后以全屏、无浏览器UI的方式运行，接近原生应用体验
-      apple-mobile-web-app-capable：设为yes时，iOS Safari会将WebApp视为独立应用启动
-      -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <!-- Android Chrome 全屏 -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <!-- status-bar-style：控制状态栏样式（default、black、black-translucent），需与页面背景协调 -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <!-- 主题色 theme-color：Chrome、Edge等浏览器会将其用于地址栏背景色 主题色应与品牌主色一致，避免频繁更改 -->
-    <meta name="theme-color" content="#FFFFFF" />
-    <link rel="icon" type="image/svg+xml" href="./assets/favicon.png" />
-    <!-- iOS设备专用，建议尺寸为180x180 -->
-    <link rel="apple-touch-icon" href="./assets/logo.png" />
-    <title>神奇加减法</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: #fff;
-        touch-action: none;
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="30以内加减法步进式练习工具" />
+    <title>30以内加减法练习</title>
+    <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+      <h1 class="header-title">30以内加减法练习</h1>
+      <button class="btn-new" id="btn-new">换一题</button>
+    </header>
+
+    <!-- 主卡片区域 -->
+    <main class="main-card">
+      <!-- 算式展示 -->
+      <div class="problem-display" id="problem-display">
+        <span class="num">--</span>
+        <span class="op">+</span>
+        <span class="num">--</span>
+        <span class="eq">=</span>
+        <span class="result-hidden">?</span>
+      </div>
+
+      <!-- 步骤标签 -->
+      <div class="step-label" id="step-label">准备开始...</div>
+
+      <!-- 可视化区域 -->
+      <div class="visualization">
+        <div class="viz-container" id="viz-container"></div>
+      </div>
+
+      <!-- 步骤指示器 -->
+      <div class="step-indicators">
+        <span class="step-dot active" data-step="0"></span>
+        <span class="step-dot" data-step="1"></span>
+        <span class="step-dot" data-step="2"></span>
+        <span class="step-dot" data-step="3"></span>
+      </div>
+
+      <!-- 导航按钮 -->
+      <div class="controls">
+        <button class="btn-nav btn-prev" id="btn-prev" disabled>← 上一步</button>
+        <button class="btn-nav btn-next" id="btn-next">下一步 →</button>
+      </div>
+    </main>
+
+    <!-- 主脚本入口 -->
+    <script type="module" src="/js/main.js"></script>
   </body>
 </html>
