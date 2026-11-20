@@ -4,16 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="30以内加减法步进式练习工具" />
-    <title>30以内加减法练习</title>
+    <title>加减法练习</title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <!-- 顶部导航栏 -->
-    <header class="header">
-      <h1 class="header-title">30以内加减法练习</h1>
-      <button class="btn-new" id="btn-new">换一题</button>
-    </header>
-
     <!-- 主卡片区域 -->
     <main class="main-card">
       <!-- 算式展示 -->
@@ -34,12 +28,7 @@
       </div>
 
       <!-- 步骤指示器 -->
-      <div class="step-indicators">
-        <span class="step-dot active" data-step="0"></span>
-        <span class="step-dot" data-step="1"></span>
-        <span class="step-dot" data-step="2"></span>
-        <span class="step-dot" data-step="3"></span>
-      </div>
+      <div class="step-indicators" id="step-indicators"></div>
 
       <!-- 导航按钮 -->
       <div class="controls">
