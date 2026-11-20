@@ -4,8 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="30以内加减法步进式练习工具" />
-    <title>加减法练习</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <!--
+      将WebApp添加到主屏幕后以全屏、无浏览器UI的方式运行，接近原生应用体验
+      apple-mobile-web-app-capable：设为yes时，iOS Safari会将WebApp视为独立应用启动
+      -->
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <!-- Android Chrome 全屏 -->
+      <meta name="mobile-web-app-capable" content="yes" />
+      <!-- status-bar-style：控制状态栏样式（default、black、black-translucent），需与页面背景协调 -->
+      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      <!-- 主题色 theme-color：Chrome、Edge等浏览器会将其用于地址栏背景色 主题色应与品牌主色一致，避免频繁更改 -->
+      <meta name="theme-color" content="#F0F4F8" />
+      <link rel="icon" type="image/svg+xml" href="./assets/favicon.png" />
+      <!-- iOS设备专用，建议尺寸为180x180 -->
+      <link rel="apple-touch-icon" href="./assets/logo.png" />
+      <link rel="stylesheet" href="./css/style.css" />
+      <title>加减法练习</title>
   </head>
   <body>
     <!-- 主卡片区域 -->
@@ -38,6 +52,6 @@
     </main>
 
     <!-- 主脚本入口 -->
-    <script type="module" src="/js/main.js"></script>
+    <script type="module" src="./js/main.js"></script>
   </body>
 </html>

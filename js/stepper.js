@@ -420,14 +420,12 @@ export class Stepper {
         case 1: this.auxStep1(); break;
         case 2: this.auxStep2Borrow(); break;
         case 3: this.auxStep3BorrowCompute(); break;
-        case 4: this.auxResult(); break;
       }
     } else {
       switch (step) {
         case 0: this.auxStep0(); break;
         case 1: this.auxStep1(); break;
         case 2: this.isAddition ? this.auxStep2Addition() : this.auxStep2SubDirect(); break;
-        case 3: this.auxResult(); break;
       }
     }
   }
@@ -516,21 +514,6 @@ export class Stepper {
       LAYOUT.ONES_ZONE_X, hintY, 200
     );
     this.addAux(hint);
-  }
-
-  /** 结果辅助元素 */
-  auxResult() {
-    const baseY = LAYOUT.BASE_Y;
-    const eqY = baseY + LAYOUT.COLUMN_TOTAL_HEIGHT + 24;
-    const { num1, num2, operator, result } = this.problem;
-
-    const eqEl = document.createElement('div');
-    eqEl.className = 'result-equation visible anim-fade-in-up';
-    eqEl.style.left = '0';
-    eqEl.style.right = '0';
-    eqEl.style.top = `${eqY}px`;
-    eqEl.textContent = `${num1} ${operator} ${num2} = ${result}`;
-    this.addAux(eqEl);
   }
 
   /* ========================================
