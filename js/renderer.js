@@ -148,6 +148,23 @@ export function createGroupValueLabel(value, x, y) {
 }
 
 /**
+ * 创建列间运算符元素（放在两个列之间的间隙中）
+ * @param {string} operator - '+' 或 '−'
+ * @param {number} leftColX - 左侧列的 x 坐标
+ * @param {number} y - 垂直位置
+ * @returns {HTMLElement}
+ */
+export function createBetweenOperator(operator, leftColX, y) {
+  const el = document.createElement('div');
+  el.className = 'viz-operator between-operator';
+  el.textContent = operator;
+  /* 列宽100 + 间距10，运算符中心放在间隙中间 */
+  el.style.left = `${leftColX + 95}px`;
+  el.style.top = `${y}px`;
+  return el;
+}
+
+/**
  * 创建提示文字元素
  * @param {string} text
  * @param {number} x

@@ -22,6 +22,7 @@ import {
   createHintElement,
   getColumnPositions,
   getGroupWidth,
+  createBetweenOperator,
   LAYOUT,
 } from './renderer.js';
 
@@ -257,19 +258,20 @@ export class Stepper {
 
   /**
    * 减法(借位)第三步：借位迁移
-   * 将一个满10的列从十位区迁移到个位区
+   * 被借的列在十位区变成虚线空列(filled=0)，不直接移除
+   * 个位区新增 borrowed-ten(filled=10)，按 10 − 减数个位 + 原被减数个位 排列
    */
   computeStep2Borrow() {
     const baseY = LAYOUT.BASE_Y;
     const columns = [];
+    const migratedColIdx = this.num1Tens[this.num1Tens.length - 1].colIdx;
 
-    /* 十位区：A的十位减1（被迁移了一个），B的十位不变 */
-    const aRemainingTens = this.aTensCount - 1;
+    /* 十位区：A的十位列全部保留，被借的列 filled=0（虚线空列） */
     const allTens = [];
-    for (let i = 0; i < aRemainingTens; i++) {
-      allTens.push({ id: `a-col-${i}`, filled: 10 });
-    }
-    /* B的十位列保持 */
+    this.num1Tens.forEach(c => {
+      const isMigrated = c.colIdx === migratedColIdx;
+      allTens.push({ id: `a-col-${c.colIdx}`, filled: isMigrated ? 0 : 10 });
+    });
     this.num2Tens.forEach(c => {
       allTens.push({ id: `b-col-${c.colIdx}`, filled: 10 });
     });
@@ -278,18 +280,14 @@ export class Stepper {
       columns.push({ ...col, x: tensPos[i], y: baseY });
     });
 
-    /* 个位区：迁移的满10列 + A原个位 + B个位 */
+    /* 个位区：借来的10 − 减数个位 + 原被减数个位 */
     const onesItems = [];
-    /* 被迁移的列（取A的最后一个十位列） */
-    const migratedColIdx = this.num1Tens[this.num1Tens.length - 1].colIdx;
-    onesItems.push({ id: `a-col-${migratedColIdx}`, filled: 10 });
-    /* A原个位列 */
-    this.num1Ones.forEach(c => {
-      onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled });
-    });
-    /* B个位列 */
+    onesItems.push({ id: 'borrowed-ten', filled: 10 });
     this.num2Ones.forEach(c => {
       onesItems.push({ id: `b-col-${c.colIdx}`, filled: c.filled });
+    });
+    this.num1Ones.forEach(c => {
+      onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled });
     });
 
     const onesPos = getColumnPositions(LAYOUT.ONES_ZONE_X, onesItems.length);
@@ -302,26 +300,34 @@ export class Stepper {
 
   /**
    * 减法(借位)第四步：个位计算
-   * 10 - 减数个位 + 原被减数个位
+   * 10 − 减数个位 + 原被减数个位
+   * 被借的虚线空列在此步从十位区移除
    */
   computeStep3BorrowCompute() {
     const baseY = LAYOUT.BASE_Y;
     const columns = [];
-
-    /* 十位区：A剩余十位 - B十位 */
-    const remainingTens = this.aTensCount - 1 - this.bTensCount;
-    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, Math.max(remainingTens, 0));
-    for (let i = 0; i < remainingTens; i++) {
-      columns.push({ id: `a-col-${i}`, filled: 10, x: tensPos[i], y: baseY });
-    }
-
-    /* 个位区：迁移列(10-b_ones) + A原个位列 */
     const migratedColIdx = this.num1Tens[this.num1Tens.length - 1].colIdx;
-    const migratedRemaining = 10 - this.bOnesVal;
 
+    /* 十位区：A的十位列（排除被借的虚线空列），B的十位列 */
+    const allTens = [];
+    this.num1Tens.forEach(c => {
+      if (c.colIdx !== migratedColIdx) {
+        allTens.push({ id: `a-col-${c.colIdx}`, filled: 10 });
+      }
+    });
+    this.num2Tens.forEach(c => {
+      allTens.push({ id: `b-col-${c.colIdx}`, filled: 10 });
+    });
+    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, allTens.length);
+    allTens.forEach((col, i) => {
+      columns.push({ ...col, x: tensPos[i], y: baseY });
+    });
+
+    /* 个位区：借来列(10 − 减数个位) + 原被减数个位 */
+    const migratedRemaining = 10 - this.bOnesVal;
     const onesItems = [];
     if (migratedRemaining > 0) {
-      onesItems.push({ id: `a-col-${migratedColIdx}`, filled: migratedRemaining });
+      onesItems.push({ id: 'borrowed-ten', filled: migratedRemaining });
     }
     this.num1Ones.forEach(c => {
       onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled });
@@ -442,8 +448,8 @@ export class Stepper {
     this.addAux(createOperatorElement(this.problem.operator, LAYOUT.OPERATOR_X, opY));
   }
 
-  /** 数位分割辅助元素 */
-  auxStep1() {
+  /** 添加区域标签和分隔线 */
+  addZoneLabels() {
     const tensLabel = createZoneLabel('十位', 'left');
     tensLabel.classList.add('visible');
     this.addAux(tensLabel);
@@ -457,9 +463,29 @@ export class Stepper {
     this.addAux(divider);
   }
 
+  /** 数位分割辅助元素：区域标签 + 运算符 */
+  auxStep1() {
+    this.addZoneLabels();
+
+    const opY = LAYOUT.BASE_Y + LAYOUT.COLUMN_TOTAL_HEIGHT / 2 - 10;
+    const op = this.isAddition ? '+' : '−';
+
+    /* 个位区域运算符：A个位 [op] B个位 */
+    if (this.num1Ones.length > 0 && this.num2Ones.length > 0) {
+      const aLastOnesX = LAYOUT.ONES_ZONE_X + (this.num1Ones.length - 1) * 110;
+      this.addAux(createBetweenOperator(op, aLastOnesX, opY));
+    }
+
+    /* 十位区域运算符：A十位 [op] B十位 */
+    if (this.num1Tens.length > 0 && this.num2Tens.length > 0) {
+      const aLastTensX = LAYOUT.TENS_ZONE_X + (this.num1Tens.length - 1) * 110;
+      this.addAux(createBetweenOperator(op, aLastTensX, opY));
+    }
+  }
+
   /** 加法个位归并辅助元素 */
   auxStep2Addition() {
-    this.auxStep1(); /* 保留区域标签 */
+    this.addZoneLabels();
 
     const baseY = LAYOUT.BASE_Y;
     const onesSum = this.aOnesVal + this.bOnesVal;
@@ -475,7 +501,7 @@ export class Stepper {
 
   /** 减法直接计算辅助元素 */
   auxStep2SubDirect() {
-    this.auxStep1();
+    this.addZoneLabels();
 
     const baseY = LAYOUT.BASE_Y;
     const resultOnes = this.aOnesVal - this.bOnesVal;
@@ -487,11 +513,13 @@ export class Stepper {
     this.addAux(hint);
   }
 
-  /** 借位迁移辅助元素 */
+  /** 借位迁移辅助元素：区域标签 + 借位标记 + 个位运算符 */
   auxStep2Borrow() {
-    this.auxStep1();
+    this.addZoneLabels();
 
     const baseY = LAYOUT.BASE_Y;
+    const opY = baseY + LAYOUT.COLUMN_TOTAL_HEIGHT / 2 - 10;
+
     /* 借位标记 */
     const borrowEl = document.createElement('div');
     borrowEl.className = 'borrow-arrow visible anim-scale-in';
@@ -500,11 +528,17 @@ export class Stepper {
     borrowEl.style.top = `${baseY + LAYOUT.COLUMN_TOTAL_HEIGHT / 2}px`;
     borrowEl.textContent = '← 借1当10';
     this.addAux(borrowEl);
+
+    /* 个位区运算符：borrowed-ten [−] 减数个位 [+] 原被减数个位 */
+    /* − 在 borrowed-ten 和 b个位 之间 */
+    this.addAux(createBetweenOperator('−', LAYOUT.ONES_ZONE_X, opY));
+    /* + 在 b个位 和 a个位 之间 */
+    this.addAux(createBetweenOperator('+', LAYOUT.ONES_ZONE_X + 110, opY));
   }
 
   /** 借位计算辅助元素 */
   auxStep3BorrowCompute() {
-    this.auxStep1();
+    this.addZoneLabels();
 
     const baseY = LAYOUT.BASE_Y;
     const resultOnes = 10 - this.bOnesVal + this.aOnesVal;
