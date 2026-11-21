@@ -387,3 +387,38 @@ body {
 .anim-scale-in {
   animation: scaleIn 0.35s ease-out forwards;
 }
+
+/* ============================================
+   下拉刷新指示器
+   ============================================ */
+.pull-refresh-indicator {
+  position: fixed;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.pull-refresh-indicator.active {
+  opacity: 1;
+}
+
+.pull-refresh-arrow {
+  font-size: 24px;
+  color: #4299E1;
+  transition: transform 0.2s ease;
+  line-height: 1;
+}
+
+.pull-refresh-text {
+  font-size: 13px;
+  color: #718096;
+  white-space: nowrap;
+}

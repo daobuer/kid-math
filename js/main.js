@@ -4,6 +4,7 @@
 
 import { generateProblem } from './utils.js';
 import { Stepper } from './stepper.js';
+import { initPullRefresh } from './pull-refresh.js';
 
 /* 当前步进器实例 */
 let stepper = null;
@@ -114,3 +115,4 @@ function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', initPullRefresh);
