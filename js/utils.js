@@ -19,7 +19,7 @@ export function generateProblem() {
     return { num1, num2, operator: '+', result: num1 + num2 };
   } else {
     /* 减法：被减数 >= 减数，结果不为负，第二个数不大于20 */
-    const num1 = randomInt(2, 30);
+    const num1 = randomInt(2, 29);
     const maxNum2 = Math.min(20, num1);
     const num2 = randomInt(1, maxNum2);
     return { num1, num2, operator: '-', result: num1 - num2 };
