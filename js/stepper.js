@@ -180,23 +180,37 @@ export class Stepper {
     const baseY = LAYOUT.BASE_Y;
     const columns = [];
 
-    /* 十位区：所有满10的列 */
-    const allTens = [
-      ...this.num1Tens.map(c => ({ id: `a-col-${c.colIdx}`, filled: 10 })),
-      ...this.num2Tens.map(c => ({ id: `b-col-${c.colIdx}`, filled: 10 })),
-    ];
-    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, allTens.length);
-    allTens.forEach((col, i) => {
+    /* 十位区：num1十位列(或虚线空列) + num2十位列(或虚线空列) */
+    const tensItems = [];
+    if (this.num1Tens.length > 0) {
+      this.num1Tens.forEach(c => tensItems.push({ id: `a-col-${c.colIdx}`, filled: 10 }));
+    } else {
+      tensItems.push({ id: 'a-empty-ten', filled: 0 });
+    }
+    if (this.num2Tens.length > 0) {
+      this.num2Tens.forEach(c => tensItems.push({ id: `b-col-${c.colIdx}`, filled: 10 }));
+    } else {
+      tensItems.push({ id: 'b-empty-ten', filled: 0 });
+    }
+    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, tensItems.length);
+    tensItems.forEach((col, i) => {
       columns.push({ ...col, x: tensPos[i], y: baseY });
     });
 
-    /* 个位区：不满10且>0的列 */
-    const allOnes = [
-      ...this.num1Ones.map(c => ({ id: `a-col-${c.colIdx}`, filled: c.filled })),
-      ...this.num2Ones.map(c => ({ id: `b-col-${c.colIdx}`, filled: c.filled })),
-    ];
-    const onesPos = getColumnPositions(LAYOUT.ONES_ZONE_X, allOnes.length);
-    allOnes.forEach((col, i) => {
+    /* 个位区：num1个位列(或虚线空列) + num2个位列(或虚线空列) */
+    const onesItems = [];
+    if (this.num1Ones.length > 0) {
+      this.num1Ones.forEach(c => onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled }));
+    } else {
+      onesItems.push({ id: 'a-empty-one', filled: 0 });
+    }
+    if (this.num2Ones.length > 0) {
+      this.num2Ones.forEach(c => onesItems.push({ id: `b-col-${c.colIdx}`, filled: c.filled }));
+    } else {
+      onesItems.push({ id: 'b-empty-one', filled: 0 });
+    }
+    const onesPos = getColumnPositions(LAYOUT.ONES_ZONE_X, onesItems.length);
+    onesItems.forEach((col, i) => {
       columns.push({ ...col, x: onesPos[i], y: baseY });
     });
 
@@ -210,13 +224,20 @@ export class Stepper {
     const baseY = LAYOUT.BASE_Y;
     const columns = [];
 
-    /* 十位区不变 */
-    const allTens = [
-      ...this.num1Tens.map(c => ({ id: `a-col-${c.colIdx}`, filled: 10 })),
-      ...this.num2Tens.map(c => ({ id: `b-col-${c.colIdx}`, filled: 10 })),
-    ];
-    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, allTens.length);
-    allTens.forEach((col, i) => {
+    /* 十位区不变（保持虚线空列占位） */
+    const tensItems = [];
+    if (this.num1Tens.length > 0) {
+      this.num1Tens.forEach(c => tensItems.push({ id: `a-col-${c.colIdx}`, filled: 10 }));
+    } else {
+      tensItems.push({ id: 'a-empty-ten', filled: 0 });
+    }
+    if (this.num2Tens.length > 0) {
+      this.num2Tens.forEach(c => tensItems.push({ id: `b-col-${c.colIdx}`, filled: 10 }));
+    } else {
+      tensItems.push({ id: 'b-empty-ten', filled: 0 });
+    }
+    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, tensItems.length);
+    tensItems.forEach((col, i) => {
       columns.push({ ...col, x: tensPos[i], y: baseY });
     });
 
@@ -228,6 +249,9 @@ export class Stepper {
       mergeCols.forEach((col, i) => {
         columns.push({ id: `merge-${i}`, filled: col.filled, x: mergePos[i], y: baseY });
       });
+    } else {
+      /* 归并结果为0，展示虚线空置列 */
+      columns.push({ id: 'merge-0', filled: 0, x: LAYOUT.ONES_ZONE_X, y: baseY });
     }
 
     return columns;
@@ -240,18 +264,20 @@ export class Stepper {
     const baseY = LAYOUT.BASE_Y;
     const columns = [];
 
-    /* 十位区：减去num2的十位后剩余 */
+    /* 十位区：减去num2的十位后剩余（为0时展示虚线空置列） */
     const remainingTens = this.aTensCount - this.bTensCount;
-    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, Math.max(remainingTens, 0));
-    for (let i = 0; i < remainingTens; i++) {
-      columns.push({ id: `a-col-${i}`, filled: 10, x: tensPos[i], y: baseY });
+    if (remainingTens > 0) {
+      const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, remainingTens);
+      for (let i = 0; i < remainingTens; i++) {
+        columns.push({ id: `a-col-${this.num1Tens[i].colIdx}`, filled: 10, x: tensPos[i], y: baseY });
+      }
+    } else {
+      columns.push({ id: 'a-empty-ten', filled: 0, x: LAYOUT.TENS_ZONE_X, y: baseY });
     }
 
-    /* 个位区：直接相减结果 */
+    /* 个位区：直接相减结果（为0时展示虚线空置列） */
     const resultOnes = this.aOnesVal - this.bOnesVal;
-    if (resultOnes > 0) {
-      columns.push({ id: 'result-one', filled: resultOnes, x: LAYOUT.ONES_ZONE_X, y: baseY });
-    }
+    columns.push({ id: 'result-one', filled: Math.max(resultOnes, 0), x: LAYOUT.ONES_ZONE_X, y: baseY });
 
     return columns;
   }
@@ -266,29 +292,35 @@ export class Stepper {
     const columns = [];
     const migratedColIdx = this.num1Tens[this.num1Tens.length - 1].colIdx;
 
-    /* 十位区：A的十位列全部保留，被借的列 filled=0（虚线空列） */
-    const allTens = [];
+    /* 十位区：A的十位列全部保留，被借的列 filled=0（虚线空列）；B保持占位 */
+    const tensItems = [];
     this.num1Tens.forEach(c => {
       const isMigrated = c.colIdx === migratedColIdx;
-      allTens.push({ id: `a-col-${c.colIdx}`, filled: isMigrated ? 0 : 10 });
+      tensItems.push({ id: `a-col-${c.colIdx}`, filled: isMigrated ? 0 : 10 });
     });
-    this.num2Tens.forEach(c => {
-      allTens.push({ id: `b-col-${c.colIdx}`, filled: 10 });
-    });
-    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, allTens.length);
-    allTens.forEach((col, i) => {
+    if (this.num2Tens.length > 0) {
+      this.num2Tens.forEach(c => tensItems.push({ id: `b-col-${c.colIdx}`, filled: 10 }));
+    } else {
+      tensItems.push({ id: 'b-empty-ten', filled: 0 });
+    }
+    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, tensItems.length);
+    tensItems.forEach((col, i) => {
       columns.push({ ...col, x: tensPos[i], y: baseY });
     });
 
-    /* 个位区：借来的10 − 减数个位 + 原被减数个位 */
+    /* 个位区：借来的10 − 减数个位(或虚线空列) + 原被减数个位(或虚线空列) */
     const onesItems = [];
     onesItems.push({ id: 'borrowed-ten', filled: 10 });
-    this.num2Ones.forEach(c => {
-      onesItems.push({ id: `b-col-${c.colIdx}`, filled: c.filled });
-    });
-    this.num1Ones.forEach(c => {
-      onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled });
-    });
+    if (this.num2Ones.length > 0) {
+      this.num2Ones.forEach(c => onesItems.push({ id: `b-col-${c.colIdx}`, filled: c.filled }));
+    } else {
+      onesItems.push({ id: 'b-empty-one', filled: 0 });
+    }
+    if (this.num1Ones.length > 0) {
+      this.num1Ones.forEach(c => onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled }));
+    } else {
+      onesItems.push({ id: 'a-empty-one', filled: 0 });
+    }
 
     const onesPos = getColumnPositions(LAYOUT.ONES_ZONE_X, onesItems.length);
     onesItems.forEach((col, i) => {
@@ -308,30 +340,28 @@ export class Stepper {
     const columns = [];
     const migratedColIdx = this.num1Tens[this.num1Tens.length - 1].colIdx;
 
-    /* 十位区：A的十位列（排除被借的虚线空列），B的十位列 */
-    const allTens = [];
-    this.num1Tens.forEach(c => {
-      if (c.colIdx !== migratedColIdx) {
-        allTens.push({ id: `a-col-${c.colIdx}`, filled: 10 });
+    /* 十位区：A的十位列（排除被借的虚线空列），B的十位列移除（已消耗） */
+    const remainingATens = this.num1Tens.filter(c => c.colIdx !== migratedColIdx);
+    const remainingTensAfterSub = remainingATens.length - this.bTensCount;
+    if (remainingTensAfterSub > 0) {
+      const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, remainingTensAfterSub);
+      for (let i = 0; i < remainingTensAfterSub; i++) {
+        columns.push({ id: `a-col-${remainingATens[i].colIdx}`, filled: 10, x: tensPos[i], y: baseY });
       }
-    });
-    this.num2Tens.forEach(c => {
-      allTens.push({ id: `b-col-${c.colIdx}`, filled: 10 });
-    });
-    const tensPos = getColumnPositions(LAYOUT.TENS_ZONE_X, allTens.length);
-    allTens.forEach((col, i) => {
-      columns.push({ ...col, x: tensPos[i], y: baseY });
-    });
+    } else {
+      /* 十位减完为0，展示虚线空置列 */
+      columns.push({ id: 'a-empty-ten', filled: 0, x: LAYOUT.TENS_ZONE_X, y: baseY });
+    }
 
-    /* 个位区：借来列(10 − 减数个位) + 原被减数个位 */
+    /* 个位区：借来列(10 − 减数个位) + 原被减数个位(或虚线空列) */
     const migratedRemaining = 10 - this.bOnesVal;
     const onesItems = [];
-    if (migratedRemaining > 0) {
-      onesItems.push({ id: 'borrowed-ten', filled: migratedRemaining });
+    onesItems.push({ id: 'borrowed-ten', filled: Math.max(migratedRemaining, 0) });
+    if (this.num1Ones.length > 0) {
+      this.num1Ones.forEach(c => onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled }));
+    } else {
+      onesItems.push({ id: 'a-empty-one', filled: 0 });
     }
-    this.num1Ones.forEach(c => {
-      onesItems.push({ id: `a-col-${c.colIdx}`, filled: c.filled });
-    });
 
     const onesPos = getColumnPositions(LAYOUT.ONES_ZONE_X, onesItems.length);
     onesItems.forEach((col, i) => {
@@ -348,7 +378,11 @@ export class Stepper {
     const baseY = LAYOUT.BASE_Y;
     const resultCols = decomposeNumber(this.problem.result).filter(c => c.filled > 0);
 
-    if (resultCols.length === 0) return [];
+    /* 结果为0时展示一个虚线空置列 */
+    if (resultCols.length === 0) {
+      const startX = (LAYOUT.VIZ_WIDTH - getGroupWidth(1)) / 2;
+      return [{ id: 'result-0', filled: 0, x: startX, y: baseY }];
+    }
 
     const totalWidth = getGroupWidth(resultCols.length);
     const startX = (LAYOUT.VIZ_WIDTH - totalWidth) / 2;
@@ -463,24 +497,22 @@ export class Stepper {
     this.addAux(divider);
   }
 
-  /** 数位分割辅助元素：区域标签 + 运算符 */
+  /** 数位分割辅助元素：区域标签 + 运算符（运算符始终显示） */
   auxStep1() {
     this.addZoneLabels();
 
     const opY = LAYOUT.BASE_Y + LAYOUT.COLUMN_TOTAL_HEIGHT / 2 - 10;
     const op = this.isAddition ? '+' : '−';
 
-    /* 个位区域运算符：A个位 [op] B个位 */
-    if (this.num1Ones.length > 0 && this.num2Ones.length > 0) {
-      const aLastOnesX = LAYOUT.ONES_ZONE_X + (this.num1Ones.length - 1) * 110;
-      this.addAux(createBetweenOperator(op, aLastOnesX, opY));
-    }
+    /* 个位区域运算符：始终显示（A个位列数至少为1，虚线空列占位） */
+    const aOnesCount = Math.max(this.num1Ones.length, 1);
+    const aLastOnesX = LAYOUT.ONES_ZONE_X + (aOnesCount - 1) * 110;
+    this.addAux(createBetweenOperator(op, aLastOnesX, opY));
 
-    /* 十位区域运算符：A十位 [op] B十位 */
-    if (this.num1Tens.length > 0 && this.num2Tens.length > 0) {
-      const aLastTensX = LAYOUT.TENS_ZONE_X + (this.num1Tens.length - 1) * 110;
-      this.addAux(createBetweenOperator(op, aLastTensX, opY));
-    }
+    /* 十位区域运算符：始终显示（A十位列数至少为1，虚线空列占位） */
+    const aTensCount = Math.max(this.num1Tens.length, 1);
+    const aLastTensX = LAYOUT.TENS_ZONE_X + (aTensCount - 1) * 110;
+    this.addAux(createBetweenOperator(op, aLastTensX, opY));
   }
 
   /** 加法个位归并辅助元素 */
