@@ -240,8 +240,8 @@ body {
 .between-operator {
   font-size: 18px;
   font-weight: 700;
-  color: #4299E1;
-  background: #FFFFFF;
+  color: #FFFFFF;
+  background: #4299E1;
   padding: 0 4px;
   border-radius: 4px;
   z-index: 10;
